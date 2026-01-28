@@ -4,13 +4,13 @@ info:
     version: 1.0.0
     description: REST API for task management with authentication
 servers:
-    -   url: http://localhost:3000
+    -   url: http://localhost:3000/api/v1
 security:
-    - BearerAuth: []
+    -   BearerAuth: [ ]
 paths:
-    /api/auth/register:
+    /auth/register:
         post:
-            security: []
+            security: [ ]
             summary: Register user
             tags: [ Auth ]
             requestBody:
@@ -25,9 +25,6 @@ paths:
                                     type: string
                                     format: email
                                 password:
-                                    type: string
-                                    minLength: 6
-                                passwordConfirmation:
                                     type: string
                                     minLength: 6
             responses:
@@ -50,9 +47,9 @@ paths:
                                 $ref: '#/components/schemas/ErrorResponse'
                 409:
                     description: User already exists
-    /api/auth/login:
+    /auth/login:
         post:
-            security: []
+            security: [ ]
             summary: Login user
             tags: [ Auth ]
             requestBody:
@@ -83,9 +80,9 @@ paths:
                     description: Invalid credentials
                 404:
                     description: User not found
-    /api/auth/refresh:
+    /auth/refresh:
         post:
-            security: []
+            security: [ ]
             tags: [ Auth ]
             summary: Refresh access token
             responses:
@@ -102,7 +99,7 @@ paths:
                                 $ref: '#/components/schemas/AccessToken'
                 401:
                     description: Invalid or expired refresh token
-    /api/tasks:
+    /tasks:
         get:
             tags: [ Tasks ]
             summary: Get tasks list
@@ -177,7 +174,7 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Task'
-    /api/tasks/{id}:
+    /tasks/{id}:
         get:
             tags: [ Tasks ]
             summary: Get task by id
@@ -236,7 +233,7 @@ paths:
             responses:
                 204:
                     description: Task deleted
-    /api/tasks/{id}/complete:
+    /tasks/{id}/complete:
         patch:
             tags: [ Tasks ]
             summary: Mark task as completed
