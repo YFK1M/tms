@@ -1,0 +1,327 @@
+openapi: 3.0.3
+info:
+    title: Task Management System API
+    version: 1.0.0
+    description: REST API for task management with authentication
+servers:
+    -   url: http://localhost:3000
+security:
+    - BearerAuth: []
+paths:
+    /api/auth/register:
+        post:
+            security: []
+            summary: Register user
+            tags: [ Auth ]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [ email, password, passwordConfirmation ]
+                            properties:
+                                email:
+                                    type: string
+                                    format: email
+                                password:
+                                    type: string
+                                    minLength: 6
+                                passwordConfirmation:
+                                    type: string
+                                    minLength: 6
+            responses:
+                201:
+                    description: User registered
+                    headers:
+                        Set-Cookie:
+                            description: refreshToken=...; HttpOnly; Secure
+                            schema:
+                                type: string
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AuthResponse'
+                400:
+                    description: Validation error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                409:
+                    description: User already exists
+    /api/auth/login:
+        post:
+            security: []
+            summary: Login user
+            tags: [ Auth ]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [ email, password ]
+                            properties:
+                                email:
+                                    type: string
+                                password:
+                                    type: string
+            responses:
+                200:
+                    description: Login successful
+                    headers:
+                        Set-Cookie:
+                            description: refreshToken=...; HttpOnly; Secure
+                            schema:
+                                type: string
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AuthResponse'
+                400:
+                    description: Invalid credentials
+                404:
+                    description: User not found
+    /api/auth/refresh:
+        post:
+            security: []
+            tags: [ Auth ]
+            summary: Refresh access token
+            responses:
+                200:
+                    description: Access token refreshed
+                    headers:
+                        Set-Cookie:
+                            description: refreshToken=...; HttpOnly; Secure
+                            schema:
+                                type: string
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AccessToken'
+                401:
+                    description: Invalid or expired refresh token
+    /api/tasks:
+        get:
+            tags: [ Tasks ]
+            summary: Get tasks list
+            parameters:
+                -   in: query
+                    name: status
+                    schema:
+                        type: string
+                        enum: [ TODO, IN_PROGRESS, DONE ]
+                -   in: query
+                    name: priority
+                    schema:
+                        type: string
+                        enum: [ LOW, MEDIUM, HIGH ]
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sortBy
+                    schema:
+                        type: string
+                        enum: [ createdAt, dueDate ]
+                -   in: query
+                    name: order
+                    schema:
+                        type: string
+                        enum: [ asc, desc ]
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                        default: 1
+                -   in: query
+                    name: limit
+                    schema:
+                        type: integer
+                        default: 10
+            responses:
+                200:
+                    description: Paginated tasks list
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/PaginatedTasks'
+
+        post:
+            tags: [ Tasks ]
+            summary: Create task
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [ title ]
+                            properties:
+                                title:
+                                    type: string
+                                description:
+                                    type: string
+                                priority:
+                                    type: string
+                                    enum: [ LOW, MEDIUM, HIGH ]
+                                dueDate:
+                                    type: string
+                                    format: date-time
+            responses:
+                201:
+                    description: Task created
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Task'
+    /api/tasks/{id}:
+        get:
+            tags: [ Tasks ]
+            summary: Get task by id
+            parameters:
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        type: string
+                        format: uuid
+            responses:
+                200:
+                    description: Task details
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Task'
+
+        put:
+            tags: [ Tasks ]
+            summary: Update task
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                title:
+                                    type: string
+                                description:
+                                    type: string
+                                priority:
+                                    type: string
+                                    enum: [ LOW, MEDIUM, HIGH ]
+                                dueDate:
+                                    type: string
+                                    format: date-time
+            responses:
+                200:
+                    description: Task updated
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Task'
+
+        delete:
+            tags: [ Tasks ]
+            summary: Delete task
+            parameters:
+                -   in: path
+                    name: id
+                    schema:
+                        type: string
+                        format: uuid
+            responses:
+                204:
+                    description: Task deleted
+    /api/tasks/{id}/complete:
+        patch:
+            tags: [ Tasks ]
+            summary: Mark task as completed
+            responses:
+                200:
+                    description: Task marked as DONE
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Task'
+
+components:
+    securitySchemes:
+        BearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+    schemas:
+        AccessToken:
+            type: object
+            required: [ accessToken ]
+            properties:
+                accessToken:
+                    type: string
+                    description: JWT access token
+        User:
+            type: object
+            properties:
+                id:
+                    type: string
+                    format: uuid
+                email:
+                    type: string
+                    format: email
+                createdAt:
+                    type: string
+                    format: date-time
+        AuthResponse:
+            allOf:
+                -   $ref: '#/components/schemas/User'
+                -   $ref: '#/components/schemas/AccessToken'
+        Task:
+            type: object
+            properties:
+                id:
+                    type: string
+                    format: uuid
+                title:
+                    type: string
+                description:
+                    type: string
+                    nullable: true
+                status:
+                    type: string
+                    enum: [ TODO, IN_PROGRESS, DONE ]
+                priority:
+                    type: string
+                    enum: [ LOW, MEDIUM, HIGH ]
+                dueDate:
+                    type: string
+                    format: date-time
+                    nullable: true
+                createdAt:
+                    type: string
+                    format: date-time
+                updatedAt:
+                    type: string
+                    format: date-time
+        PaginatedTasks:
+            type: object
+            required: [ items, page, limit, total ]
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Task'
+                page:
+                    type: integer
+                limit:
+                    type: integer
+                total:
+                    type: integer
+        ErrorResponse:
+            type: object
+            required: [ message ]
+            properties:
+                message:
+                    type: string

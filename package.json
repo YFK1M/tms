@@ -12,7 +12,8 @@
   ],
   "scripts": {
     "dev": "docker-compose up",
-    "dev:backend": "yarn workspace backend start:dev",
-    "dev:frontend": "yarn workspace frontend dev"
+    "generate:types": "yarn workspace @tms/shared-types openapi-ts",
+    "dev:backend": "yarn generate:types && yarn workspace backend start:dev",
+    "dev:frontend": "yarn generate:types && yarn workspace frontend dev"
   }
 }
