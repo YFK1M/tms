@@ -1,35 +1,9 @@
-version: "3.9"
-
 services:
-    postgres:
-        image: postgres:16-alpine
-        container_name: tms-postgres
-        restart: unless-stopped
-        environment:
-            POSTGRES_USER: admin
-            POSTGRES_PASSWORD: admin
-            POSTGRES_DB: tms_db
-        ports:
-            - "5432:5432"
-        volumes:
-            - postgres_data:/var/lib/postgresql/data
-        healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U admin -d tms_db"]
-            interval: 5s
-            timeout: 5s
-            retries: 5
-
     backend:
         build:
             context: .
             dockerfile: apps/backend/Dockerfile
         environment:
             DATABASE_URL: postgresql://admin:admin@postgres:5432/tms_db
-        depends_on:
-            postgres:
-                condition: service_healthy
         ports:
             - "3000:3000"
-
-volumes:
-    postgres_data:

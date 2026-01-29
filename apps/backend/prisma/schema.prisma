@@ -1,5 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
+  output     = "../generated/prisma"
+  engineType = "cjs"
 }
 
 datasource db {
@@ -11,6 +13,8 @@ model User {
   email        String   @unique
   passwordHash String
   createdAt    DateTime @default(now())
+
+  tasks        Task[]
 }
 
 model Task {
