@@ -1,9 +1,12 @@
-import { useState } from 'react';
-import { LoginPage } from './auth/LoginPage';
-import { TasksPage } from './tasks/TasksPage';
+import { RouterProvider } from "react-router-dom";
+import { router } from "./app/router.tsx";
+import { AuthProvider } from "./shared/auth/auth.context.tsx";
 
 export default function App() {
-    const [auth, setAuth] = useState(false);
 
-    return auth ? <TasksPage /> : <LoginPage onSuccess={() => setAuth(true)} />;
+    return (
+        <AuthProvider>
+            <RouterProvider router={router} />
+        </AuthProvider>
+    )
 }
