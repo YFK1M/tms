@@ -159,6 +159,7 @@ export type PostTasksData = {
     title: string;
     description?: string;
     priority?: "LOW" | "MEDIUM" | "HIGH";
+    status?: "TODO" | "IN_PROGRESS" | "DONE";
     dueDate?: string;
   };
   path?: never;
@@ -217,6 +218,7 @@ export type PutTasksByIdData = {
   body: {
     title?: string;
     description?: string;
+    status?: "TODO" | "IN_PROGRESS" | "DONE";
     priority?: "LOW" | "MEDIUM" | "HIGH";
     dueDate?: string;
   };
@@ -234,20 +236,3 @@ export type PutTasksByIdResponses = {
 
 export type PutTasksByIdResponse =
   PutTasksByIdResponses[keyof PutTasksByIdResponses];
-
-export type PatchTasksByIdCompleteData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: "/tasks/{id}/complete";
-};
-
-export type PatchTasksByIdCompleteResponses = {
-  /**
-   * Task marked as DONE
-   */
-  200: Task;
-};
-
-export type PatchTasksByIdCompleteResponse =
-  PatchTasksByIdCompleteResponses[keyof PatchTasksByIdCompleteResponses];

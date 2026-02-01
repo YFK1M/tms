@@ -19,7 +19,6 @@ export class AuthController {
         @Body() dto: RegisterDto,
         @Res({ passthrough: true }) res: Response,
     ) {
-        console.log(dto)
         const result = await this.auth.register(dto.email, dto.password);
         if (!result?.id) return null;
         this.setRefreshCookie(res, result.id);
@@ -39,16 +38,22 @@ export class AuthController {
 
     @Post('refresh')
     async refresh(@Req() req: Request) {
-        const userId = req.cookies?.refreshToken;
+        const userId = req.cookies?.['refreshToken'] as string | undefined;
         return this.auth.refresh(userId);
+    }
+
+    @Post('logout')
+    async logout(
+        @Res({ passthrough: true }) res: Response,
+    ) {
+        res.clearCookie('refreshToken');
     }
 
     private setRefreshCookie(res: Response, userId: string) {
         res.cookie('refreshToken', userId, {
             httpOnly: true,
             sameSite: 'strict',
-            secure: false,
-            path: '/auth/refresh',
+            secure: false
         });
     }
 }

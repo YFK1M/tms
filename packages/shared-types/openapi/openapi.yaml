@@ -164,6 +164,9 @@ paths:
                                 priority:
                                     type: string
                                     enum: [ LOW, MEDIUM, HIGH ]
+                                status:
+                                    type: string
+                                    enum: [ TODO, IN_PROGRESS, DONE ]
                                 dueDate:
                                     type: string
                                     format: date-time
@@ -207,6 +210,9 @@ paths:
                                     type: string
                                 description:
                                     type: string
+                                status:
+                                    type: string
+                                    enum: [ TODO, IN_PROGRESS, DONE ]
                                 priority:
                                     type: string
                                     enum: [ LOW, MEDIUM, HIGH ]
@@ -233,18 +239,6 @@ paths:
             responses:
                 204:
                     description: Task deleted
-    /tasks/{id}/complete:
-        patch:
-            tags: [ Tasks ]
-            summary: Mark task as completed
-            responses:
-                200:
-                    description: Task marked as DONE
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Task'
-
 components:
     securitySchemes:
         BearerAuth:

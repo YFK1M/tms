@@ -6,7 +6,7 @@ import {
     Patch,
     Param,
     Delete,
-    UseGuards, Query,
+    UseGuards, Query, Put,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -38,7 +38,7 @@ export class TasksController {
         return this.tasksService.findOne(id, userId);
     }
 
-    @Patch(':id')
+    @Put(':id')
     update(
         @User('id') userId: string,
         @Param('id') id: string,
@@ -50,10 +50,5 @@ export class TasksController {
     @Delete(':id')
     remove(@User('id') userId: string, @Param('id') id: string) {
         return this.tasksService.remove(id, userId);
-    }
-
-    @Patch(':id/complete')
-    complete(@User('id') userId: string, @Param('id') id: string) {
-        return this.tasksService.complete(id, userId);
     }
 }

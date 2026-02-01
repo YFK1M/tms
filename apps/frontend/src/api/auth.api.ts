@@ -1,46 +1,26 @@
-import type { AuthResponse } from '@tms/shared-types/src/generated/types.gen.ts';
-
-const API_URL = import.meta.env.VITE_API_URL;
+import type {AccessToken, AuthResponse} from '@tms/shared-types/src/generated/types.gen.ts';
+import {API_URL, apiPostRequest} from "@app/api/api.ts";
 
 export async function loginRequest(email: string, password: string): Promise<AuthResponse> {
-    const res = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-    });
-
-    if (!res.ok) {
-        throw new Error('Login failed');
-    }
-
-    return res.json();
+    return await apiPostRequest<AuthResponse>('/auth/login', { email, password })
 }
 
 export async function registerRequest(email: string, password: string): Promise<AuthResponse> {
-    const res = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-    });
-
-    if (!res.ok) {
-        throw new Error('Register failed');
-    }
-
-    return res.json();
+    return await apiPostRequest<AuthResponse>('/auth/register', { email, password })
 }
 
-export async function refreshRequest(): Promise<{ accessToken: string }> {
-    const res = await fetch(`${API_URL}/auth/refresh`, {
+export async function refreshRequest(): Promise<AccessToken> {
+    const newTokenResponse = await fetch(`${API_URL}/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+        },
     });
 
-    if (!res.ok) {
+    if (!newTokenResponse.ok) {
         throw new Error('Unauthorized');
     }
 
-    return res.json();
+    return newTokenResponse.json();
 }

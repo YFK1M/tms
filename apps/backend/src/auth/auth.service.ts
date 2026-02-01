@@ -51,7 +51,10 @@ export class AuthService {
         return this.buildAuthResponse(user);
     }
 
-    async refresh(userId: string) {
+    async refresh(userId: string | undefined) {
+        if (!userId) {
+            throw new UnauthorizedException('Invalid user');
+        }
         return this.buildAccessToken({ sub: userId });
     }
 

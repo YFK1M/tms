@@ -83,15 +83,6 @@ export class TasksService {
     async remove(id: string, userId: string) {
         await this.findOne(id, userId);
 
-        await this.prisma.task.delete({ where: { id } });
-    }
-
-    async complete(id: string, userId: string) {
-        await this.findOne(id, userId);
-
-        return this.prisma.task.update({
-            where: { id },
-            data: { status: 'DONE' },
-        });
+        return  this.prisma.task.delete({ where: { id } });
     }
 }
