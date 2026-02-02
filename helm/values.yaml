@@ -1,7 +1,7 @@
 backend:
   image:
     repository: ghcr.io/yfk1m/tms/backend
-    tag: ""
+    tag: "v0.0.5"
     pullPolicy: IfNotPresent
   replicas: 1
   port: 3000
@@ -10,7 +10,7 @@ backend:
 frontend:
   image:
     repository: ghcr.io/yfk1m/tms/frontend
-    tag: ""
+    tag: "v0.0.2"
     pullPolicy: IfNotPresent
   replicas: 1
   port: 80
@@ -28,7 +28,10 @@ postgres:
 
 httpRoute:
   enabled: true
-  hostname: tms.ywa.red
+  frontend:
+    hostname: tms.ywa.red
+  backend:
+    hostname: back.tms.ywa.red
   gateway:
     name: main
     namespace: gateway

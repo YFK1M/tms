@@ -6,6 +6,10 @@ COPY packages ./packages
 COPY apps/frontend ./apps/frontend
 
 RUN yarn install --frozen-lockfile
+
+ARG VITE_API_URL=https://back.tms.ywa.red/api/v1
+ENV VITE_API_URL=$VITE_API_URL
+
 RUN yarn workspace frontend build
 
 FROM nginx:alpine

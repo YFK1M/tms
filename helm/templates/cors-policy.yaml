@@ -1,0 +1,26 @@
+{{- if .Values.httpRoute.enabled }}
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: {{ .Release.Name }}-backend-cors
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: {{ .Release.Name }}-backend
+  cors:
+    allowOrigins:
+      - "https://{{ .Values.httpRoute.frontend.hostname }}"
+    allowMethods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    allowHeaders:
+      - Content-Type
+      - Authorization
+    allowCredentials: true
+    maxAge: 86400s
+  {{- end }}
