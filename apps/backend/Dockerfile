@@ -12,4 +12,4 @@ WORKDIR /app/apps/backend
 
 RUN yarn prisma generate
 
-CMD ["sh", "-c", "yarn prisma migrate deploy && yarn start:dev"]
+CMD ["sh", "-c", "yarn prisma migrate deploy && yarn start"]

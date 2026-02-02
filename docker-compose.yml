@@ -1,5 +1,7 @@
 services:
     backend:
+        image: tms/backend:latest
+        env_file: .env
         build:
             context: .
             dockerfile: apps/backend/Dockerfile
@@ -7,3 +9,11 @@ services:
             DATABASE_URL: postgresql://admin:admin@postgres:5432/tms_db
         ports:
             - "3000:3000"
+
+    frontend:
+        image: tms/frontend:latest
+        build:
+            context: .
+            dockerfile: apps/frontend/Dockerfile
+        ports:
+            - "80:80"
