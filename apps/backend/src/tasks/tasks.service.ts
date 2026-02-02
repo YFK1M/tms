@@ -18,7 +18,7 @@ export class TasksService {
         });
     }
 
-    async findAll(userId: string, query: TasksQueryDto) {
+    async findAll(query: TasksQueryDto) {
         const {
             status,
             priority,
@@ -33,7 +33,6 @@ export class TasksService {
         const limitSafe = limit ?? 10;
 
         const where: Prisma.TaskWhereInput = {
-            userId,
             status,
             priority,
             ...(search && {
@@ -62,17 +61,17 @@ export class TasksService {
         };
     }
 
-    async findOne(id: string, userId: string) {
+    async findOne(id: string) {
         const task = await this.prisma.task.findFirst({
-            where: { id, userId },
+            where: { id },
         });
 
         if (!task) throw new NotFoundException('Task not found');
         return task;
     }
 
-    async update(id: string, userId: string, dto: UpdateTaskDto) {
-        await this.findOne(id, userId);
+    async update(id: string, dto: UpdateTaskDto) {
+        await this.findOne(id);
 
         return this.prisma.task.update({
             where: { id },
@@ -80,9 +79,9 @@ export class TasksService {
         });
     }
 
-    async remove(id: string, userId: string) {
-        await this.findOne(id, userId);
+    async remove(id: string) {
+        await this.findOne(id);
 
-        return  this.prisma.task.delete({ where: { id } });
+        return this.prisma.task.delete({ where: { id } });
     }
 }
