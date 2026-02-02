@@ -20,8 +20,11 @@ COPY packages ./packages
 COPY apps/backend/package.json ./apps/backend/package.json
 RUN yarn install --production --frozen-lockfile --ignore-scripts && yarn add -W prisma
 
+WORKDIR /app/apps/backend
+
 COPY --from=build /app/apps/backend/dist ./dist
 COPY --from=build /app/apps/backend/generated ./generated
 COPY --from=build /app/apps/backend/prisma ./prisma
+COPY --from=build /app/apps/backend/prisma.config.ts ./prisma.config.ts
 
 CMD ["node", "dist/src/main.js"]
