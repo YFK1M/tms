@@ -7,16 +7,21 @@ COPY packages ./packages
 COPY apps/backend ./apps/backend
 
 RUN yarn install --frozen-lockfile
-RUN yarn workspace backend build
-RUN yarn workspace backend prisma gepnerate
+
+WORKDIR /app/apps/backend
+RUN yarn build
 
 FROM node:20-alpine
 
 WORKDIR /app
 
-COPY --from=build /app/apps/backend/dist ./dist
-COPY --from=build /app/apps/backend/node_modules/.prisma ./node_modules/.prisma
-COPY --from=build /app/apps/backend/package.json ./
-COPY --from=build /app/node_modules ./node_modules
+COPY package.json yarn.lock ./
+COPY packages ./packages
+COPY apps/backend/package.json ./apps/backend/package.json
+RUN yarn install --production --frozen-lockfile --ignore-scripts && yarn add -W prisma
 
-CMD ["node", "dist/main.js"]
+COPY --from=build /app/apps/backend/dist ./dist
+COPY --from=build /app/apps/backend/generated ./generated
+COPY --from=build /app/apps/backend/prisma ./prisma
+
+CMD ["node", "dist/src/main.js"]

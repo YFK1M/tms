@@ -15,14 +15,34 @@ spec:
         app: {{ .Release.Name }}-backend
     spec:
       containers:
-        - name: backend
-          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
-          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
-          ports:
-            - containerPort: {{ .Values.backend.port }}
-          env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.backend.secretName }}
-                  key: DATABASE_URL
+          - name: backend
+            image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+            imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+            ports:
+              - containerPort: {{ .Values.backend.port }}
+            env:
+              - name: DATABASE_URL
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.backend.secretName }}
+                    key: DATABASE_URL
+              - name: JWT_ACCESS_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.backend.secretName }}
+                    key: JWT_ACCESS_SECRET
+              - name: JWT_REFRESH_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.backend.secretName }}
+                    key: JWT_REFRESH_SECRET
+              - name: JWT_ACCESS_EXPIRES
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.backend.secretName }}
+                    key: JWT_ACCESS_EXPIRES
+              - name: JWT_REFRESH_EXPIRES
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.backend.secretName }}
+                    key: JWT_REFRESH_EXPIRES
