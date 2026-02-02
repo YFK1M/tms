@@ -1,0 +1,166 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      migrations_changed: ${{ steps.migrations.outputs.changed }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Release Please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          release-type: node
+
+      - name: Check for migration changes
+        id: migrations
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q "apps/backend/prisma/migrations/"; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    needs: release
+    if: ${{ needs.release.outputs.release_created }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/backend/Dockerfile.deploy
+          push: true
+          tags: ghcr.io/${{ github.repository }}/backend:${{ needs.release.outputs.tag_name }}
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/frontend/Dockerfile.deploy
+          push: true
+          tags: ghcr.io/${{ github.repository }}/frontend:${{ needs.release.outputs.tag_name }}
+
+  update-values:
+    needs: [release, build]
+    if: ${{ needs.release.outputs.release_created }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: master
+
+      - name: Update values.yaml
+        run: |
+          sed -i 's/tag: ".*"/tag: "${{ needs.release.outputs.tag_name }}"/' helm/values.yaml
+          sed -i 's/tag: ""/tag: "${{ needs.release.outputs.tag_name }}"/' helm/values.yaml
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add helm/values.yaml
+          git commit -m "chore: update image tags to ${{ needs.release.outputs.tag_name }} [skip ci]" || exit 0
+          git push
+
+  migrate:
+    needs: [release, build, update-values]
+    if: ${{ needs.release.outputs.release_created && needs.release.outputs.migrations_changed == 'true' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: master
+
+      - name: Pull latest
+        run: git pull origin master
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Setup kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Run migrations
+        run: |
+          kubectl run tms-migrate-${{ github.run_id }} \
+            --image=ghcr.io/${{ github.repository }}/backend:${{ needs.release.outputs.tag_name }} \
+            --namespace=tms \
+            --restart=Never \
+            --env="DATABASE_URL=$(kubectl get secret tms-secrets -n tms -o jsonpath='{.data.DATABASE_URL}' | base64 -d)" \
+            --command -- yarn prisma migrate deploy
+          kubectl wait --for=condition=Ready pod/tms-migrate-${{ github.run_id }} -n tms --timeout=60s || true
+          kubectl logs -f tms-migrate-${{ github.run_id }} -n tms
+          kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/tms-migrate-${{ github.run_id }} -n tms --timeout=300s
+          kubectl delete pod tms-migrate-${{ github.run_id }} -n tms
+
+  deploy:
+    needs: [release, build, update-values, migrate]
+    if: ${{ always() && needs.release.outputs.release_created && (needs.migrate.result == 'success' || needs.migrate.result == 'skipped') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: master
+
+      - name: Pull latest
+        run: git pull origin master
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Setup kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install tms ./helm \
+            --namespace tms \
+            --create-namespace

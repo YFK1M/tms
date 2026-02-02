@@ -1,19 +1,13 @@
 services:
-    backend:
-        image: tms/backend:latest
-        env_file: .env
-        build:
-            context: .
-            dockerfile: apps/backend/Dockerfile
+    postgres:
+        image: postgres:16-alpine
+        ports:
+            - "5432:5432"
         environment:
-            DATABASE_URL: postgresql://admin:admin@postgres:5432/tms_db
-        ports:
-            - "3000:3000"
-
-    frontend:
-        image: tms/frontend:latest
-        build:
-            context: .
-            dockerfile: apps/frontend/Dockerfile
-        ports:
-            - "80:80"
+            POSTGRES_USER: admin
+            POSTGRES_PASSWORD: admin
+            POSTGRES_DB: tms_db
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+volumes:
+    postgres_data:

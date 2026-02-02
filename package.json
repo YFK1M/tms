@@ -12,7 +12,6 @@
   ],
   "scripts": {
     "dev": "docker-compose up",
-    "docker:infra": "docker compose -f docker-compose.infra.yml up -d",
     "generate:prisma": "yarn workspace backend prisma generate",
     "migrate:prisma": "yarn workspace backend prisma migrate dev",
     "generate:types": "yarn workspace @tms/shared-types openapi-ts",
