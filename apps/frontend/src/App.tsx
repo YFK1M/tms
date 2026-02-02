@@ -4,6 +4,7 @@ import {createTheme, ThemeProvider} from "@mui/material";
 import {ProtectedRoute} from "@app/app/ProtectedRoute.tsx";
 import AuthPage from "@app/pages/AuthPage.tsx";
 import TasksPage from "@app/pages/TasksPage.tsx";
+import LogoutPage from "@app/pages/LogoutPage.tsx";
 
 const darkTheme = createTheme({
     palette: {
@@ -32,11 +33,12 @@ export default function App() {
                 <AuthProvider>
                     <Routes>
                         <Route path="/auth" element={<AuthPage/>} />
-                            <Route path="/" element={
-                                <ProtectedRoute>
-                                    <TasksPage/>
-                                </ProtectedRoute>
-                            } />
+                        <Route path="/" element={
+                            <ProtectedRoute>
+                                <TasksPage/>
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/logout" element={<LogoutPage/>} />
                     </Routes>
                 </AuthProvider>
             </BrowserRouter>

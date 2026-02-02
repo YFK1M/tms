@@ -24,3 +24,7 @@ export async function refreshRequest(): Promise<AccessToken> {
 
     return newTokenResponse.json();
 }
+
+export async function logoutRequest(): Promise<void> {
+    return await apiPostRequest<void>('/auth/logout');
+}
